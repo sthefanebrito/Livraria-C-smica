@@ -1,0 +1,1038 @@
+<!DOCTYPE html>
+<html lang="pt-BR" class="scroll-smooth">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Livraria Cósmica</title>
+    
+    <!-- Tailwind CSS -->
+    <script src="https://cdn.tailwindcss.com"></script>
+    
+    <!-- Google Fonts -->
+    <link rel="preconnect" href="https://fonts.googleapis.com">
+    <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+    <link href="https://fonts.googleapis.com/css2?family=Poppins:wght@300;400;500;600;700&family=Bebas+Neue&display=swap" rel="stylesheet">
+    
+    <!-- Estilos Personalizados -->
+    <style>
+        :root {
+            --primary-color: #8b5cf6; /* Violet */
+            --primary-hover-color: #7c3aed;
+            --background-color: #0a0a0a; /* Preto profundo */
+            --card-color: #18181b; /* Zinco escuro */
+            --text-color: #a1a1aa; /* Zinco claro */
+            --text-strong-color: #f4f4f5; /* Zinco muito claro */
+        }
+        /* Trava a rolagem do body quando um modal está aberto */
+        body.modal-open {
+            overflow: hidden;
+        }
+        body {
+            font-family: 'Poppins', sans-serif;
+            background-color: var(--background-color);
+            color: var(--text-color);
+        }
+        .font-display {
+            font-family: 'Bebas Neue', sans-serif;
+        }
+        /* Efeito de gradiente no header inicial */
+        header {
+            transition: all 0.3s ease-in-out;
+        }
+        .header-gradient {
+            background-image: linear-gradient(to bottom, rgba(0,0,0,0.8), rgba(0,0,0,0));
+        }
+        /* Estilo do Header ao rolar a página */
+        header.scrolled {
+            background-color: rgba(10, 10, 10, 0.8);
+            backdrop-filter: blur(10px);
+            box-shadow: 0 4px 6px rgba(0, 0, 0, 0.1);
+            padding-top: 0.5rem;
+            padding-bottom: 0.5rem;
+        }
+        header.scrolled #logo-text, header.scrolled #search-input-container {
+            display: none;
+        }
+        /* --- CARD DE LIVRO --- */
+        .book-card {
+            position: relative;
+            overflow: hidden;
+            border-radius: 0.5rem;
+            transition: transform 0.3s ease, box-shadow 0.3s ease;
+            cursor: pointer;
+            aspect-ratio: 2 / 3;
+        }
+        .book-card:hover {
+            transform: scale(1.05);
+            box-shadow: 0 0 25px rgba(139, 92, 246, 0.5);
+        }
+        .book-card img {
+            width: 100%;
+            height: 100%;
+            object-fit: cover;
+            transition: transform 0.4s ease;
+        }
+        .book-card:hover img {
+            transform: scale(1.1);
+        }
+        .book-card-overlay {
+            position: absolute;
+            inset: 0;
+            background: linear-gradient(to top, rgba(0, 0, 0, 0.95) 20%, rgba(0, 0, 0, 0));
+            opacity: 0;
+            transition: opacity 0.3s ease;
+        }
+        .book-card:hover .book-card-overlay {
+            opacity: 1;
+        }
+        .book-card-content {
+            position: absolute;
+            bottom: 0;
+            left: 0;
+            right: 0;
+            padding: 1rem;
+            transform: translateY(100%);
+            transition: transform 0.35s ease-out;
+            color: white;
+        }
+        .book-card:hover .book-card-content {
+            transform: translateY(0);
+        }
+        .btn-primary {
+            background-color: var(--primary-color);
+            transition: background-color 0.3s;
+        }
+        .btn-primary:hover {
+            background-color: var(--primary-hover-color);
+        }
+        /* Modals e Painéis */
+        .modal-backdrop, .cart-container { transition: opacity 0.3s ease-in-out; }
+        .modal-content, .cart-panel, .checkout-panel { 
+            transition: transform 0.3s ease-in-out, opacity 0.3s ease-in-out; 
+            transform: scale(0.95); 
+            opacity: 0;
+        }
+        .modal-open .modal-content, .cart-open .cart-panel, .checkout-open .checkout-panel { 
+            transform: scale(1); 
+            opacity: 1;
+        }
+        .cart-panel, .checkout-panel { transform: translateX(100%); }
+        .cart-open .cart-panel, .checkout-open .checkout-panel { transform: translateX(0); }
+        .modal-scrollable {
+            overflow-y: auto;
+        }
+        /* Carrossel de Livros */
+        .carousel {
+            position: relative;
+        }
+        .carousel-container {
+            display: flex;
+            gap: 1.5rem; /* 24px */
+            padding: 1rem 0;
+            overflow-x: auto;
+            scrollbar-width: none; /* Firefox */
+            scroll-behavior: smooth;
+        }
+        .carousel-container::-webkit-scrollbar {
+            display: none; /* Chrome, Safari, Opera */
+        }
+        .carousel-btn {
+            position: absolute;
+            top: 50%;
+            transform: translateY(-50%);
+            background-color: rgba(0, 0, 0, 0.5);
+            color: white;
+            border-radius: 50%;
+            width: 40px;
+            height: 40px;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            z-index: 10;
+            cursor: pointer;
+            opacity: 0;
+            transition: opacity 0.3s ease;
+        }
+        .carousel:hover .carousel-btn {
+            opacity: 1;
+        }
+        .carousel-btn.prev {
+            left: -20px;
+        }
+        .carousel-btn.next {
+            right: -20px;
+        }
+        /* Animação Hero */
+        @keyframes slide-up {
+            from {
+                opacity: 0;
+                transform: translateY(20px);
+            }
+            to {
+                opacity: 1;
+                transform: translateY(0);
+            }
+        }
+        .hero-title {
+            animation: slide-up 0.8s ease-out forwards;
+        }
+        .hero-subtitle {
+            animation: slide-up 0.8s ease-out 0.2s forwards;
+            opacity: 0; /* Começa invisível */
+        }
+        .hero-section:hover {
+            box-shadow: 0 0 30px rgba(139, 92, 246, 0.3);
+            transition: box-shadow 0.4s ease;
+        }
+        .text-gradient {
+            background: linear-gradient(45deg, #a78bfa, #8b5cf6);
+            -webkit-background-clip: text;
+            -webkit-text-fill-color: transparent;
+        }
+        /* Botão Voltar ao Topo */
+        #back-to-top.visible {
+            opacity: 1;
+            pointer-events: auto;
+            transform: translateY(0);
+        }
+        
+    </style>
+</head>
+<body class="antialiased">
+
+    <!-- Cabeçalho -->
+    <header class="sticky top-0 z-40 header-gradient py-4">
+        <nav class="container mx-auto px-4 sm:px-6 lg:px-8 flex justify-between items-center">
+            <a href="#" id="logo-link" class="text-3xl font-display tracking-wider text-white flex items-center gap-2">
+                <svg xmlns="http://www.w3.org/2000/svg" width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" class="text-violet-400 flex-shrink-0"><path d="M4 19.5v-15A2.5 2.5 0 0 1 6.5 2H20v20H6.5a2.5 2.5 0 0 1 0-5H20"></path></svg>
+                <span id="logo-text">Livraria Cósmica</span>
+            </a>
+            <div id="search-input-container" class="hidden md:flex items-center space-x-4 border border-gray-700 rounded-full bg-black/30 backdrop-blur-sm">
+                <input id="search-input" type="text" placeholder="Buscar por título ou autor..." class="bg-transparent text-white px-4 py-2 rounded-full w-64 focus:outline-none placeholder-gray-400">
+            </div>
+            <div class="flex items-center space-x-4">
+                <button id="cart-button" class="relative text-white p-2 rounded-full hover:bg-white/10 transition-colors">
+                    <svg xmlns="http://www.w3.org/2000/svg" width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><circle cx="8" cy="21" r="1"></circle><circle cx="19" cy="21" r="1"></circle><path d="M2.05 2.05h2l2.66 12.42a2 2 0 0 0 2 1.58h9.78a2 2 0 0 0 1.95-1.57l1.65-7.43H5.12"></path></svg>
+                    <span id="cart-badge" class="absolute -top-1 -right-1 bg-violet-500 text-white text-xs font-bold rounded-full h-5 w-5 flex items-center justify-center hidden">0</span>
+                </button>
+                <div id="auth-container">
+                    <!-- Preenchido pelo JavaScript -->
+                </div>
+            </div>
+        </nav>
+    </header>
+
+    <!-- Conteúdo Principal -->
+    <main class="container mx-auto px-4 sm:px-6 lg:px-8 py-8 md:py-12">
+        <!-- Seção Hero (Destaque) -->
+        <section class="hero-section mb-12 p-8 rounded-lg bg-black">
+             <h1 class="hero-title text-5xl font-display tracking-wider text-gradient">Bem-vindo ao Cosmos dos Livros</h1>
+             <p class="hero-subtitle mt-2 text-lg text-gray-300 max-w-2xl">Explore novos mundos, desvende mistérios e encontre sua próxima grande aventura literária.</p>
+        </section>
+        
+        <!-- Container para os gêneros ou resultados da busca -->
+        <div id="content-container">
+            <!-- As seções de gênero serão injetadas aqui -->
+        </div>
+    </main>
+    
+    <!-- MODALS E PAINÉIS LATERAIS -->
+
+    <!-- Modal de Detalhes do Livro -->
+    <div id="book-details-modal" class="fixed inset-0 bg-black bg-opacity-80 z-50 hidden items-center justify-center p-4 modal-backdrop">
+        <div id="book-details-content" class="bg-zinc-900 rounded-lg shadow-2xl w-full max-w-4xl h-full max-h-[90vh] flex flex-col modal-content border border-zinc-800">
+            <!-- Conteúdo injetado pelo JavaScript -->
+        </div>
+    </div>
+
+    <!-- Modal de Login -->
+    <div id="login-modal" class="fixed inset-0 bg-black bg-opacity-70 z-50 hidden items-center justify-center p-4 modal-backdrop">
+        <div class="bg-zinc-900 p-8 rounded-lg shadow-2xl w-full max-w-md modal-content border border-zinc-800 modal-scrollable max-h-[90vh]">
+            <h2 class="text-2xl font-bold text-white mb-6 text-center">Login</h2>
+            <form id="login-form">
+                <div class="mb-4">
+                    <label for="login-email" class="block text-zinc-400 mb-2">Email</label>
+                    <input type="email" id="login-email" class="w-full bg-zinc-800 border border-zinc-700 rounded-lg px-4 py-2 text-white focus:outline-none focus:ring-2 focus:ring-violet-500" required>
+                </div>
+                <div class="mb-6">
+                    <label for="login-password" class="block text-zinc-400 mb-2">Senha</label>
+                    <input type="password" id="login-password" class="w-full bg-zinc-800 border border-zinc-700 rounded-lg px-4 py-2 text-white focus:outline-none focus:ring-2 focus:ring-violet-500" required>
+                </div>
+                <button type="submit" class="w-full btn-primary text-white font-bold py-2 px-4 rounded-lg">Entrar</button>
+            </form>
+            <p class="text-center mt-4">Não tem uma conta? <button id="show-register" class="text-violet-400 hover:underline font-semibold">Cadastre-se</button></p>
+            <button id="close-login-modal" class="absolute top-4 right-4 text-zinc-500 hover:text-white text-2xl">&times;</button>
+        </div>
+    </div>
+    
+    <!-- Modal de Cadastro -->
+    <div id="register-modal" class="fixed inset-0 bg-black bg-opacity-70 z-50 hidden items-center justify-center p-4 modal-backdrop">
+         <div class="bg-zinc-900 p-8 rounded-lg shadow-2xl w-full max-w-md modal-content border border-zinc-800 modal-scrollable max-h-[90vh]">
+            <h2 class="text-2xl font-bold text-white mb-6 text-center">Criar Conta</h2>
+            <form id="register-form">
+                 <div class="mb-4">
+                    <label for="register-name" class="block text-zinc-400 mb-2">Nome</label>
+                    <input type="text" id="register-name" class="w-full bg-zinc-800 border border-zinc-700 rounded-lg px-4 py-2 text-white focus:outline-none focus:ring-2 focus:ring-violet-500" required>
+                </div>
+                <div class="mb-4">
+                    <label for="register-email" class="block text-zinc-400 mb-2">Email</label>
+                    <input type="email" id="register-email" class="w-full bg-zinc-800 border border-zinc-700 rounded-lg px-4 py-2 text-white focus:outline-none focus:ring-2 focus:ring-violet-500" required>
+                </div>
+                <div class="mb-6">
+                    <label for="register-password" class="block text-zinc-400 mb-2">Senha</label>
+                    <input type="password" id="register-password" class="w-full bg-zinc-800 border border-zinc-700 rounded-lg px-4 py-2 text-white focus:outline-none focus:ring-2 focus:ring-violet-500" required>
+                </div>
+                <button type="submit" class="w-full btn-primary text-white font-bold py-2 px-4 rounded-lg">Criar Conta</button>
+            </form>
+            <p class="text-center mt-4">Já tem uma conta? <button id="show-login" class="text-violet-400 hover:underline font-semibold">Faça Login</button></p>
+            <button id="close-register-modal" class="absolute top-4 right-4 text-zinc-500 hover:text-white text-2xl">&times;</button>
+        </div>
+    </div>
+    
+    <!-- Painel do Carrinho -->
+    <div id="cart-container" class="fixed inset-0 bg-black bg-opacity-50 z-50 hidden">
+        <div class="cart-panel absolute top-0 right-0 h-full w-full max-w-md bg-zinc-900 shadow-2xl flex flex-col border-l border-zinc-800">
+            <div class="flex justify-between items-center p-6 border-b border-zinc-800">
+                <h2 class="text-2xl font-bold text-white">Seu Carrinho</h2>
+                <button id="close-cart-button" class="text-zinc-500 hover:text-white text-2xl">&times;</button>
+            </div>
+            <div id="cart-items" class="flex-grow p-6 overflow-y-auto"></div>
+            <div class="p-6 border-t border-zinc-800">
+                <div class="flex justify-between items-center mb-4 text-lg">
+                    <span class="font-semibold text-white">Total:</span>
+                    <span id="cart-total" class="font-bold text-violet-400">R$ 0,00</span>
+                </div>
+                <button id="checkout-btn" class="w-full bg-violet-500 hover:bg-violet-600 text-white font-bold py-3 px-4 rounded-lg transition-colors">Finalizar Compra</button>
+            </div>
+        </div>
+    </div>
+    
+    <!-- Painel de Checkout -->
+    <div id="checkout-container" class="fixed inset-0 bg-black bg-opacity-50 z-50 hidden">
+        <div class="checkout-panel absolute top-0 right-0 h-full w-full max-w-md bg-zinc-900 shadow-2xl flex flex-col border-l border-zinc-800">
+            <div class="flex justify-between items-center p-6 border-b border-zinc-800">
+                <h2 class="text-2xl font-bold text-white">Finalizar Compra</h2>
+                <button id="close-checkout-button" class="text-zinc-500 hover:text-white text-2xl">&times;</button>
+            </div>
+            <div class="flex-grow p-6 overflow-y-auto">
+                <form id="checkout-form">
+                    <h3 class="text-xl text-white font-semibold mb-4">Endereço de Entrega</h3>
+                    <div class="grid grid-cols-2 gap-4">
+                        <div class="col-span-2"><input type="text" placeholder="Nome Completo" class="w-full bg-zinc-800 p-2 rounded border border-zinc-700" required></div>
+                        <div class="col-span-2"><input type="text" placeholder="Endereço" class="w-full bg-zinc-800 p-2 rounded border border-zinc-700" required></div>
+                        <div><input type="text" placeholder="Cidade" class="w-full bg-zinc-800 p-2 rounded border border-zinc-700" required></div>
+                        <div><input type="text" placeholder="CEP" class="w-full bg-zinc-800 p-2 rounded border border-zinc-700" required></div>
+                    </div>
+                    <h3 class="text-xl text-white font-semibold mt-6 mb-4">Pagamento</h3>
+                    <div>
+                        <input type="text" placeholder="Número do Cartão" class="w-full bg-zinc-800 p-2 rounded border border-zinc-700 mb-4" required>
+                        <div class="grid grid-cols-2 gap-4">
+                            <input type="text" placeholder="Validade (MM/AA)" class="w-full bg-zinc-800 p-2 rounded border border-zinc-700" required>
+                            <input type="text" placeholder="CVV" class="w-full bg-zinc-800 p-2 rounded border border-zinc-700" required>
+                        </div>
+                    </div>
+                </form>
+            </div>
+            <div class="p-6 border-t border-zinc-800">
+                <div class="flex justify-between items-center mb-4 text-lg">
+                    <span class="font-semibold text-white">Total a pagar:</span>
+                    <span id="checkout-total" class="font-bold text-violet-400">R$ 0,00</span>
+                </div>
+                <button type="submit" form="checkout-form" class="w-full bg-green-500 hover:bg-green-600 text-white font-bold py-3 px-4 rounded-lg transition-colors">Confirmar Pedido</button>
+            </div>
+        </div>
+    </div>
+
+    <!-- Notificação Toast -->
+    <div id="toast-notification" class="fixed bottom-5 right-5 bg-violet-500 text-white py-3 px-6 rounded-lg shadow-lg transform translate-x-[120%] transition-transform duration-500 ease-in-out z-50">
+        <p>Item adicionado ao carrinho!</p>
+    </div>
+
+    <!-- Botão Voltar ao Topo -->
+    <button id="back-to-top" class="fixed bottom-5 right-5 z-50 p-3 rounded-full bg-violet-600 text-white shadow-lg hover:bg-violet-700 transition-all duration-300 opacity-0 pointer-events-none transform translate-y-4">
+        <svg xmlns="http://www.w3.org/2000/svg" width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="m18 15-6-6-6 6"/></svg>
+    </button>
+
+
+    <script>
+    document.addEventListener('DOMContentLoaded', () => {
+
+        const books = [
+             // Fantasia
+            { id: 1, title: 'O Senhor dos Anéis', author: 'J.R.R. Tolkien', genre: 'Fantasia', price: 79.90, img: 'https://placehold.co/400x600/0a0a0a/f4f4f5?text=Senhor+dos+Anéis'},
+            { id: 2, title: 'O Nome do Vento', author: 'Patrick Rothfuss', genre: 'Fantasia', price: 72.30, img: 'https://placehold.co/400x600/0a0a0a/f4f4f5?text=O+Nome+do+Vento' },
+            { id: 3, title: 'A Guerra dos Tronos', author: 'George R.R. Martin', genre: 'Fantasia', price: 65.00, img: 'https://placehold.co/400x600/0a0a0a/f4f4f5?text=A+Guerra+dos+Tronos' },
+            { id: 4, title: 'O Hobbit', author: 'J.R.R. Tolkien', genre: 'Fantasia', price: 49.90, img: 'https://placehold.co/400x600/0a0a0a/f4f4f5?text=O+Hobbit' },
+            { id: 21, title: 'O Leão, a Feiticeira e o Guarda-Roupa', author: 'C.S. Lewis', genre: 'Fantasia', price: 45.00, img: 'https://placehold.co/400x600/0a0a0a/f4f4f5?text=Crônicas+de+Nárnia' },
+            { id: 22, title: 'Eragon', author: 'Christopher Paolini', genre: 'Fantasia', price: 58.50, img: 'https://placehold.co/400x600/0a0a0a/f4f4f5?text=Eragon' },
+            { id: 23, title: 'A Bússola de Ouro', author: 'Philip Pullman', genre: 'Fantasia', price: 52.90, img: 'https://placehold.co/400x600/0a0a0a/f4f4f5?text=A+Bússola+de+Ouro' },
+            { id: 24, title: 'O Mágico de Oz', author: 'L. Frank Baum', genre: 'Fantasia', price: 35.00, img: 'https://placehold.co/400x600/0a0a0a/f4f4f5?text=O+Mágico+de+Oz' },
+            // Ficção Científica
+            { id: 5, title: 'Duna', author: 'Frank Herbert', genre: 'Ficção Científica', price: 59.90, img: 'https://placehold.co/400x600/0a0a0a/f4f4f5?text=Duna' },
+            { id: 6, title: 'Neuromancer', author: 'William Gibson', genre: 'Ficção Científica', price: 45.50, img: 'https://placehold.co/400x600/0a0a0a/f4f4f5?text=Neuromancer' },
+            { id: 7, title: 'Fundação', author: 'Isaac Asimov', genre: 'Ficção Científica', price: 55.00, img: 'https://placehold.co/400x600/0a0a0a/f4f4f5?text=Fundação' },
+            { id: 8, title: 'O Guia do Mochileiro das Galáxias', author: 'Douglas Adams', genre: 'Ficção Científica', price: 39.99, img: 'https://placehold.co/400x600/0a0a0a/f4f4f5?text=Guia+do+Mochileiro' },
+            { id: 25, title: 'Blade Runner', author: 'Philip K. *****', genre: 'Ficção Científica', price: 48.00, img: 'https://placehold.co/400x600/0a0a0a/f4f4f5?text=Blade+Runner' },
+            { id: 26, title: 'Eu, Robô', author: 'Isaac Asimov', genre: 'Ficção Científica', price: 42.90, img: 'https://placehold.co/400x600/0a0a0a/f4f4f5?text=Eu,+Robô' },
+            { id: 27, title: 'O Fim da Eternidade', author: 'Isaac Asimov', genre: 'Ficção Científica', price: 49.50, img: 'https://placehold.co/400x600/0a0a0a/f4f4f5?text=O+Fim+da+Eternidade' },
+            { id: 28, title: 'A Máquina do Tempo', author: 'H.G. Wells', genre: 'Ficção Científica', price: 32.00, img: 'https://placehold.co/400x600/0a0a0a/f4f4f5?text=A+Máquina+do+Tempo' },
+            // Terror
+            { id: 9, title: 'It: A Coisa', author: 'Stephen King', genre: 'Terror', price: 89.90, img: 'https://placehold.co/400x600/0a0a0a/f4f4f5?text=It' },
+            { id: 10, title: 'O Iluminado', author: 'Stephen King', genre: 'Terror', price: 54.90, img: 'https://placehold.co/400x600/0a0a0a/f4f4f5?text=O+Iluminado' },
+            { id: 29, title: 'Drácula', author: 'Bram Stoker', genre: 'Terror', price: 40.00, img: 'https://placehold.co/400x600/0a0a0a/f4f4f5?text=Drácula' },
+            { id: 30, title: 'Frankenstein', author: 'Mary Shelley', genre: 'Terror', price: 38.90, img: 'https://placehold.co/400x600/0a0a0a/f4f4f5?text=Frankenstein' },
+            { id: 31, title: 'O Exorcista', author: 'William Peter Blatty', genre: 'Terror', price: 51.00, img: 'https://placehold.co/400x600/0a0a0a/f4f4f5?text=O+Exorcista' },
+            { id: 32, title: 'Psicose', author: 'Robert Bloch', genre: 'Terror', price: 44.50, img: 'https://placehold.co/400x600/0a0a0a/f4f4f5?text=Psicose' },
+            { id: 33, title: 'O Chamado de Cthulhu', author: 'H.P. Lovecraft', genre: 'Terror', price: 46.80, img: 'https://placehold.co/400x600/0a0a0a/f4f4f5?text=O+Chamado+de+Cthulhu' },
+            { id: 34, title: 'A Maldição da Residência Hill', author: 'Shirley Jackson', genre: 'Terror', price: 49.90, img: 'https://placehold.co/400x600/0a0a0a/f4f4f5?text=Residência+Hill' },
+            // Suspense & Policial
+            { id: 11, title: 'O Silêncio dos Inocentes', author: 'Thomas Harris', genre: 'Suspense', price: 49.90, img: 'https://uploads.onecompiler.io/4384tr7ru/43z949u5z/download%20(24).jpeg' },
+            { id: 12, title: 'Garota Exemplar', author: 'Gillian Flynn', genre: 'Suspense', price: 42.50, img: 'https://uploads.onecompiler.io/4384tr7ru/43z949u5z/download%20(23).jpeg' },
+            { id: 35, title: 'A Garota no Trem', author: 'Paula Hawkins', genre: 'Suspense', price: 39.00, img: 'https://uploads.onecompiler.io/4384tr7ru/43z949u5z/download%20(25).jpeg' },
+            { id: 36, title: 'O Código Da Vinci', author: 'Dan Brown', genre: 'Suspense', price: 55.00, img: 'https://placehold.co/400x600/0a0a0a/f4f4f5?text=O+Código+Da+Vinci' },
+            { id: 37, title: 'E Não Sobrou Nenhum', author: 'Agatha Christie', genre: 'Policial', price: 35.00, img: 'https://uploads.onecompiler.io/4384tr7ru/43z949u5z/download%20(26).jpeg' },
+            { id: 38, title: 'O Assassinato no Expresso do Oriente', author: 'Agatha Christie', genre: 'Policial', price: 38.00, img: 'https://uploads.onecompiler.io/4384tr7ru/43z949u5z/download%20(27).jpeg' },
+            { id: 39, title: 'Um Estudo em Vermelho', author: 'Arthur Conan Doyle', genre: 'Policial', price: 30.00, img: 'https://placehold.co/400x600/0a0a0a/f4f4f5?text=Sherlock+Holmes' },
+            { id: 40, title: 'O Falcão Maltês', author: 'Dashiell Hammett', genre: 'Policial', price: 45.00, img: 'https://placehold.co/400x600/0a0a0a/f4f4f5?text=O+Falcão+Maltês' },
+            // Clássicos
+            { id: 15, title: 'Orgulho e Preconceito', author: 'Jane Austen', genre: 'Clássicos', price: 34.50, img: 'https://placehold.co/400x600/0a0a0a/f4f4f5?text=Orgulho+e+Preconceito' },
+            { id: 16, title: 'O Grande Gatsby', author: 'F. Scott Fitzgerald', genre: 'Clássicos', price: 38.00, img: 'https://placehold.co/400x600/0a0a0a/f4f4f5?text=O+Grande+Gatsby' },
+            { id: 41, title: 'Dom Quixote', author: 'Miguel de Cervantes', genre: 'Clássicos', price: 85.00, img: 'https://placehold.co/400x600/0a0a0a/f4f4f5?text=Dom+Quixote' },
+            { id: 42, title: 'Cem Anos de Solidão', author: 'Gabriel García Márquez', genre: 'Clássicos', price: 60.00, img: 'https://placehold.co/400x600/0a0a0a/f4f4f5?text=Cem+Anos+de+Solidão' },
+            { id: 43, title: 'O apanhador no campo de centeio', author: 'J.D. Salinger', genre: 'Clássicos', price: 42.00, img: 'https://placehold.co/400x600/0a0a0a/f4f4f5?text=O+Apanhador' },
+            { id: 44, title: 'Moby *****', author: 'Herman Melville', genre: 'Clássicos', price: 65.00, img: 'https://placehold.co/400x600/0a0a0a/f4f4f5?text=Moby+*****' },
+            { id: 45, title: 'Crime e Castigo', author: 'Fiódor Dostoiévski', genre: 'Clássicos', price: 68.00, img: 'https://placehold.co/400x600/0a0a0a/f4f4f5?text=Crime+e+Castigo' },
+            { id: 46, title: 'O Conde de Monte Cristo', author: 'Alexandre Dumas', genre: 'Clássicos', price: 95.00, img: 'https://placehold.co/400x600/0a0a0a/f4f4f5?text=O+Conde+de+Monte+Cristo' },
+            // Distopia
+            { id: 13, title: '1984', author: 'George Orwell', genre: 'Distopia', price: 35.80, img: 'https://placehold.co/400x600/0a0a0a/f4f4f5?text=1984' },
+            { id: 14, title: 'Admirável Mundo Novo', author: 'Aldous Huxley', genre: 'Distopia', price: 42.00, img: 'https://placehold.co/400x600/0a0a0a/f4f4f5?text=Admirável+Mundo+Novo' },
+            { id: 47, title: 'Fahrenheit 451', author: 'Ray Bradbury', genre: 'Distopia', price: 40.00, img: 'https://placehold.co/400x600/0a0a0a/f4f4f5?text=Fahrenheit+451' },
+            { id: 48, title: 'Laranja Mecânica', author: 'Anthony Burgess', genre: 'Distopia', price: 41.50, img: 'https://placehold.co/400x600/0a0a0a/f4f4f5?text=Laranja+Mecânica' },
+            { id: 49, title: 'O Conto da Aia', author: 'Margaret Atwood', genre: 'Distopia', price: 53.00, img: 'https://placehold.co/400x600/0a0a0a/f4f4f5?text=O+Conto+da+Aia' },
+            { id: 50, title: 'Jogos Vorazes', author: 'Suzanne Collins', genre: 'Distopia', price: 48.00, img: 'https://placehold.co/400x600/0a0a0a/f4f4f5?text=Jogos+Vorazes' },
+            { id: 51, title: 'Divergente', author: 'Veronica Roth', genre: 'Distopia', price: 47.90, img: 'https://placehold.co/400x600/0a0a0a/f4f4f5?text=Divergente' },
+            { id: 52, title: 'A Estrada', author: 'Cormac McCarthy', genre: 'Distopia', price: 49.00, img: 'https://placehold.co/400x600/0a0a0a/f4f4f5?text=A+Estrada' },
+            // Poesia
+            { id: 53, title: 'Folhas de Relva', author: 'Walt Whitman', genre: 'Poesia', price: 55.00, img: 'https://placehold.co/400x600/0a0a0a/f4f4f5?text=Folhas+de+Relva' },
+            { id: 54, title: 'Ariel', author: 'Sylvia Plath', genre: 'Poesia', price: 48.00, img: 'https://placehold.co/400x600/0a0a0a/f4f4f5?text=Ariel' },
+            { id: 55, title: 'O que o sol faz com as flores', author: 'Rupi Kaur', genre: 'Poesia', price: 42.00, img: 'https://placehold.co/400x600/0a0a0a/f4f4f5?text=Rupi+Kaur' },
+            { id: 56, title: 'A Divina Comédia', author: 'Dante Alighieri', genre: 'Poesia', price: 75.00, img: 'https://placehold.co/400x600/0a0a0a/f4f4f5?text=A+Divina+Comédia' },
+            { id: 57, title: 'Vinte Poemas de Amor e Uma Canção Desesperada', author: 'Pablo Neruda', genre: 'Poesia', price: 38.00, img: 'https://placehold.co/400x600/0a0a0a/f4f4f5?text=Pablo+Neruda' },
+            { id: 58, title: 'Sentimento do Mundo', author: 'Carlos Drummond de Andrade', genre: 'Poesia', price: 40.00, img: 'https://placehold.co/400x600/0a0a0a/f4f4f5?text=Drummond' },
+            { id: 59, title: 'O Corvo', author: 'Edgar Allan Poe', genre: 'Poesia', price: 30.00, img: 'https://placehold.co/400x600/0a0a0a/f4f4f5?text=O+Corvo' },
+            { id: 60, title: 'Eu e outras poesias', author: 'Augusto dos Anjos', genre: 'Poesia', price: 35.00, img: 'https://placehold.co/400x600/0a0a0a/f4f4f5?text=Augusto+dos+Anjos' },
+            // Mangá
+            { id: 17, title: 'Ataque dos *****ãs Vol. 1', author: 'Hajime Isayama', genre: 'Mangá', price: 29.90, img: 'https://placehold.co/400x600/0a0a0a/f4f4f5?text=Ataque+dos+*****ãs' },
+            { id: 18, title: 'Death Note Vol. 1', author: 'Tsugumi Ohba', genre: 'Mangá', price: 25.00, img: 'https://placehold.co/400x600/0a0a0a/f4f4f5?text=Death+Note' },
+            { id: 61, title: 'Naruto Vol. 1', author: 'Masashi Kishimoto', genre: 'Mangá', price: 22.90, img: 'https://placehold.co/400x600/0a0a0a/f4f4f5?text=Naruto' },
+            { id: 62, title: 'One Piece Vol. 1', author: 'Eiichiro Oda', genre: 'Mangá', price: 24.90, img: 'https://placehold.co/400x600/0a0a0a/f4f4f5?text=One+Piece' },
+            { id: 63, title: 'Dragon Ball Vol. 1', author: 'Akira Toriyama', genre: 'Mangá', price: 20.00, img: 'https://placehold.co/400x600/0a0a0a/f4f4f5?text=Dragon+Ball' },
+            { id: 64, title: 'Berserk Vol. 1', author: 'Kentaro Miura', genre: 'Mangá', price: 35.00, img: 'https://placehold.co/400x600/0a0a0a/f4f4f5?text=Berserk' },
+            { id: 65, title: 'Fullmetal Alchemist Vol. 1', author: 'Hiromu Arakawa', genre: 'Mangá', price: 28.00, img: 'https://placehold.co/400x600/0a0a0a/f4f4f5?text=Fullmetal' },
+            { id: 66, title: 'Akira Vol. 1', author: 'Katsuhiro Otomo', genre: 'Mangá', price: 45.00, img: 'https://placehold.co/400x600/0a0a0a/f4f4f5?text=Akira' },
+            // Graphic Novel
+            { id: 19, title: 'Watchmen', author: 'Alan Moore', genre: 'Graphic Novel', price: 99.90, img: 'https://placehold.co/400x600/0a0a0a/f4f4f5?text=Watchmen' },
+            { id: 20, title: 'Persépolis', author: 'Marjane Satrapi', genre: 'Graphic Novel', price: 59.90, img: 'https://placehold.co/400x600/0a0a0a/f4f4f5?text=Persépolis' },
+            { id: 67, title: 'V de Vingança', author: 'Alan Moore', genre: 'Graphic Novel', price: 89.00, img: 'https://placehold.co/400x600/0a0a0a/f4f4f5?text=V+de+Vingança' },
+            { id: 68, title: 'Maus', author: 'Art Spiegelman', genre: 'Graphic Novel', price: 65.00, img: 'https://placehold.co/400x600/0a0a0a/f4f4f5?text=Maus' },
+            { id: 69, title: 'Sandman Vol. 1', author: 'Neil Gaiman', genre: 'Graphic Novel', price: 75.00, img: 'https://placehold.co/400x600/0a0a0a/f4f4f5?text=Sandman' },
+            { id: 70, title: 'A Piada Mortal', author: 'Alan Moore', genre: 'Graphic Novel', price: 40.00, img: 'https://placehold.co/400x600/0a0a0a/f4f4f5?text=A+Piada+Mortal' },
+            { id: 71, title: 'Ghost World', author: 'Daniel Clowes', genre: 'Graphic Novel', price: 50.00, img: 'https://placehold.co/400x600/0a0a0a/f4f4f5?text=Ghost+World' },
+            { id: 72, title: 'O Cavaleiro das Trevas', author: 'Frank Miller', genre: 'Graphic Novel', price: 95.00, img: 'https://placehold.co/400x600/0a0a0a/f4f4f5?text=Cavaleiro+das+Trevas' },
+            // Romance
+            { id: 73, title: 'A Culpa é das Estrelas', author: 'John Green', genre: 'Romance', price: 42.00, img: 'https://uploads.onecompiler.io/4384tr7ru/43z949u5z/download%20(30).jpeg' },
+            { id: 74, title: 'Como Eu Era Antes de Você', author: 'Jojo Moyes', genre: 'Romance', price: 45.00, img: 'https://uploads.onecompiler.io/4384tr7ru/43z949u5z/download%20(31).jpeg' },
+            { id: 75, title: 'Outlander', author: 'Diana Gabaldon', genre: 'Romance', price: 65.00, img: 'https://uploads.onecompiler.io/4384tr7ru/43z949u5z/download%20(32).jpeg' },
+            { id: 76, title: 'Eleanor & Park', author: 'Rainbow Rowell', genre: 'Romance', price: 39.90, img: 'https://uploads.onecompiler.io/4384tr7ru/43z949u5z/51-ki8g+Q0L._UF1000,1000_QL80_.jpg' },
+            { id: 77, title: 'O Morro dos Ventos Uivantes', author: 'Emily Brontë', genre: 'Romance', price: 40.00, img: 'https://uploads.onecompiler.io/4384tr7ru/43z949u5z/download%20(33).jpeg' },
+            { id: 78, title: 'Diário de uma Paixão', author: 'Nicholas Sparks', genre: 'Romance', price: 38.00, img: 'https://uploads.onecompiler.io/4384tr7ru/43z949u5z/download%20(34).jpeg' },
+            { id: 79, title: 'Para Todos os Garotos que Já Amei', author: 'Jenny Han', genre: 'Romance', price: 41.00, img: 'https://uploads.onecompiler.io/4384tr7ru/43z949u5z/download%20(29).jpeg' },
+            { id: 80, title: 'A Seleção', author: 'Kiera Cass', genre: 'Romance', price: 43.00, img: 'https://uploads.onecompiler.io/4384tr7ru/43z949u5z/download%20(28).jpeg' },
+            // Aventura
+            { id: 81, title: 'A Ilha do Tesouro', author: 'Robert Louis Stevenson', genre: 'Aventura', price: 35.00, img: 'https://placehold.co/400x600/0a0a0a/f4f4f5?text=A+Ilha+do+Tesouro' },
+            { id: 82, title: 'Viagem ao Centro da Terra', author: 'Júlio Verne', genre: 'Aventura', price: 38.00, img: 'https://placehold.co/400x600/0a0a0a/f4f4f5?text=Viagem+ao+Centro' },
+            { id: 83, title: 'As Aventuras de Tom Sawyer', author: 'Mark Twain', genre: 'Aventura', price: 32.00, img: 'https://placehold.co/400x600/0a0a0a/f4f4f5?text=Tom+Sawyer' },
+            { id: 84, title: 'Robinson Crusoé', author: 'Daniel Defoe', genre: 'Aventura', price: 40.00, img: 'https://placehold.co/400x600/0a0a0a/f4f4f5?text=Robinson+Crusoé' },
+            { id: 85, title: 'O Alquimista', author: 'Paulo Coelho', genre: 'Aventura', price: 39.00, img: 'https://placehold.co/400x600/0a0a0a/f4f4f5?text=O+Alquimista' },
+            { id: 86, title: 'A Volta ao Mundo em 80 Dias', author: 'Júlio Verne', genre: 'Aventura', price: 37.00, img: 'https://placehold.co/400x600/0a0a0a/f4f4f5?text=Volta+ao+Mundo' },
+            { id: 87, title: 'Percy Jackson e o Ladrão de Raios', author: 'Rick Riordan', genre: 'Aventura', price: 48.00, img: 'https://placehold.co/400x600/0a0a0a/f4f4f5?text=Percy+Jackson' },
+            { id: 88, title: 'As Crônicas de Gelo e Fogo', author: 'George R.R. Martin', genre: 'Aventura', price: 65.00, img: 'https://placehold.co/400x600/0a0a0a/f4f4f5?text=Gelo+e+Fogo' },
+            // Biografia
+            { id: 89, title: 'Steve Jobs', author: 'Walter Isaacson', genre: 'Biografia', price: 75.00, img: 'https://placehold.co/400x600/0a0a0a/f4f4f5?text=Steve+Jobs' },
+            { id: 90, title: 'O Diário de Anne Frank', author: 'Anne Frank', genre: 'Biografia', price: 45.00, img: 'https://placehold.co/400x600/0a0a0a/f4f4f5?text=Anne+Frank' },
+            { id: 91, title: 'Uma Terra Prometida', author: 'Barack Obama', genre: 'Biografia', price: 89.00, img: 'https://placehold.co/400x600/0a0a0a/f4f4f5?text=Barack+Obama' },
+            { id: 92, title: 'Minha História', author: 'Michelle Obama', genre: 'Biografia', price: 69.00, img: 'https://placehold.co/400x600/0a0a0a/f4f4f5?text=Michelle+Obama' },
+            { id: 93, title: 'Elon Musk', author: 'Ashlee Vance', genre: 'Biografia', price: 62.00, img: 'https://placehold.co/400x600/0a0a0a/f4f4f5?text=Elon+Musk' },
+            { id: 94, title: 'Eu Sou Malala', author: 'Malala Yousafzai', genre: 'Biografia', price: 48.00, img: 'https://placehold.co/400x600/0a0a0a/f4f4f5?text=Eu+Sou+Malala' },
+            { id: 95, title: 'Frida: A Biografia', author: 'Hayden Herrera', genre: 'Biografia', price: 72.00, img: 'https://placehold.co/400x600/0a0a0a/f4f4f5?text=Frida' },
+            { id: 96, title: 'A Breve História do Tempo', author: 'Stephen Hawking', genre: 'Biografia', price: 55.00, img: 'https://placehold.co/400x600/0a0a0a/f4f4f5?text=Stephen+Hawking' },
+            // Infantil
+            { id: 97, title: 'O Pequeno Príncipe', author: 'Antoine de Saint-Exupéry', genre: 'Infantil', price: 30.00, img: 'https://placehold.co/400x600/0a0a0a/f4f4f5?text=O+Pequeno+Príncipe' },
+            { id: 98, title: 'Onde Vivem os Monstros', author: 'Maurice Sendak', genre: 'Infantil', price: 35.00, img: 'https://placehold.co/400x600/0a0a0a/f4f4f5?text=Onde+Vivem+os+Monstros' },
+            { id: 99, title: 'A Lagarta Muito Comilona', author: 'Eric Carle', genre: 'Infantil', price: 28.00, img: 'https://placehold.co/400x600/0a0a0a/f4f4f5?text=A+Lagarta' },
+            { id: 100, title: 'Menina Bonita do Laço de Fita', author: 'Ana Maria Machado', genre: 'Infantil', price: 25.00, img: 'https://placehold.co/400x600/0a0a0a/f4f4f5?text=Menina+Bonita' },
+            { id: 101, title: 'Marcelo, Marmelo, Martelo', author: 'Ruth Rocha', genre: 'Infantil', price: 29.00, img: 'https://placehold.co/400x600/0a0a0a/f4f4f5?text=Marcelo' },
+            { id: 102, title: 'O Menino Maluquinho', author: 'Ziraldo', genre: 'Infantil', price: 32.00, img: 'https://placehold.co/400x600/0a0a0a/f4f4f5?text=O+Menino+Maluquinho' },
+            { id: 103, title: 'Chapeuzinho Amarelo', author: 'Chico Buarque', genre: 'Infantil', price: 31.00, img: 'https://placehold.co/400x600/0a0a0a/f4f4f5?text=Chapeuzinho+Amarelo' },
+            { id: 104, title: 'A Arca de Noé', author: 'Vinicius de Moraes', genre: 'Infantil', price: 34.00, img: 'https://placehold.co/400x600/0a0a0a/f4f4f5?text=A+Arca+de+Noé' },
+            // Filosofia
+            { id: 105, title: 'Assim Falou Zaratustra', author: 'Friedrich Nietzsche', genre: 'Filosofia', price: 48.00, img: 'https://placehold.co/400x600/0a0a0a/f4f4f5?text=Zaratustra' },
+            { id: 106, title: 'O Mundo de Sofia', author: 'Jostein Gaarder', genre: 'Filosofia', price: 58.00, img: 'https://placehold.co/400x600/0a0a0a/f4f4f5?text=O+Mundo+de+Sofia' },
+            { id: 107, title: 'A República', author: 'Platão', genre: 'Filosofia', price: 52.00, img: 'https://placehold.co/400x600/0a0a0a/f4f4f5?text=A+República' },
+            { id: 108, title: 'O Príncipe', author: 'Nicolau Maquiavel', genre: 'Filosofia', price: 35.00, img: 'https://placehold.co/400x600/0a0a0a/f4f4f5?text=O+Príncipe' },
+            { id: 109, title: 'Meditações', author: 'Marco Aurélio', genre: 'Filosofia', price: 40.00, img: 'https://placehold.co/400x600/0a0a0a/f4f4f5?text=Meditações' },
+            { id: 110, title: 'O Mito de Sísifo', author: 'Albert Camus', genre: 'Filosofia', price: 42.00, img: 'https://placehold.co/400x600/0a0a0a/f4f4f5?text=O+Mito+de+Sísifo' },
+            { id: 111, title: 'Ética a Nicômaco', author: 'Aristóteles', genre: 'Filosofia', price: 55.00, img: 'https://placehold.co/400x600/0a0a0a/f4f4f5?text=Ética' },
+            { id: 112, title: 'O Banquete', author: 'Platão', genre: 'Filosofia', price: 38.00, img: 'https://placehold.co/400x600/0a0a0a/f4f4f5?text=O+Banquete' },
+            // História
+            { id: 113, title: 'Sapiens: Uma Breve História da Humanidade', author: 'Yuval Noah Harari', genre: 'História', price: 65.00, img: 'https://placehold.co/400x600/0a0a0a/f4f4f5?text=Sapiens' },
+            { id: 114, title: '1808', author: 'Laurentino Gomes', genre: 'História', price: 55.00, img: 'https://placehold.co/400x600/0a0a0a/f4f4f5?text=1808' },
+            { id: 115, title: '1822', author: 'Laurentino Gomes', genre: 'História', price: 58.00, img: 'https://placehold.co/400x600/0a0a0a/f4f4f5?text=1822' },
+            { id: 116, title: '1889', author: 'Laurentino Gomes', genre: 'História', price: 60.00, img: 'https://placehold.co/400x600/0a0a0a/f4f4f5?text=1889' },
+            { id: 117, title: 'Uma Breve História do Século XX', author: 'Geoffrey Blainey', genre: 'História', price: 72.00, img: 'https://placehold.co/400x600/0a0a0a/f4f4f5?text=Século+XX' },
+            { id: 118, title: 'A Ascensão e Queda do Terceiro Reich', author: 'William L. Shirer', genre: 'História', price: 120.00, img: 'https://placehold.co/400x600/0a0a0a/f4f4f5?text=Terceiro+Reich' },
+            { id: 119, title: 'Os Romanos', author: 'Mary Beard', genre: 'História', price: 85.00, img: 'https://placehold.co/400x600/0a0a0a/f4f4f5?text=Os+Romanos' },
+            { id: 120, title: 'Guns, Germs, and Steel', author: 'Jared Diamond', genre: 'História', price: 78.00, img: 'https://placehold.co/400x600/0a0a0a/f4f4f5?text=Guns,+Germs,+Steel' },
+            // Autoajuda & Negócios
+            { id: 121, title: 'O Poder do Hábito', author: 'Charles Duhigg', genre: 'Autoajuda', price: 50.00, img: 'https://placehold.co/400x600/0a0a0a/f4f4f5?text=O+Poder+do+Hábito' },
+            { id: 122, title: 'A Sutil Arte de Ligar o F*da-se', author: 'Mark Manson', genre: 'Autoajuda', price: 45.00, img: 'https://placehold.co/400x600/0a0a0a/f4f4f5?text=A+Sutil+Arte' },
+            { id: 123, title: 'Como Fazer Amigos e Influenciar Pessoas', author: 'Dale Carnegie', genre: 'Autoajuda', price: 42.00, img: 'https://placehold.co/400x600/0a0a0a/f4f4f5?text=Como+Fazer+Amigos' },
+            { id: 124, title: 'Rápido e Devagar', author: 'Daniel Kahneman', genre: 'Negócios', price: 68.00, img: 'https://placehold.co/400x600/0a0a0a/f4f4f5?text=Rápido+e+Devagar' },
+            { id: 125, title: 'Pai Rico, Pai Pobre', author: 'Robert T. Kiyosaki', genre: 'Negócios', price: 48.00, img: 'https://placehold.co/400x600/0a0a0a/f4f4f5?text=Pai+Rico,+Pai+Pobre' },
+            { id: 126, title: 'Os 7 Hábitos das Pessoas Altamente Eficazes', author: 'Stephen R. Covey', genre: 'Negócios', price: 55.00, img: 'https://placehold.co/400x600/0a0a0a/f4f4f5?text=Os+7+Hábitos' },
+            { id: 127, title: 'O Homem Mais Rico da Babilônia', author: 'George S. Clason', genre: 'Negócios', price: 35.00, img: 'https://placehold.co/400x600/0a0a0a/f4f4f5?text=Homem+Mais+Rico' },
+            { id: 128, title: 'Mindset', author: 'Carol S. Dweck', genre: 'Autoajuda', price: 49.00, img: 'https://placehold.co/400x600/0a0a0a/f4f4f5?text=Mindset' },
+            // Culinária
+            { id: 129, title: 'Sal, Gordura, Ácido, Calor', author: 'Samin Nosrat', genre: 'Culinária', price: 95.00, img: 'https://placehold.co/400x600/0a0a0a/f4f4f5?text=Sal+Gordura+Ácido' },
+            { id: 130, title: 'Cozinha Confidencial', author: 'Anthony Bourdain', genre: 'Culinária', price: 58.00, img: 'https://placehold.co/400x600/0a0a0a/f4f4f5?text=Cozinha+Confidencial' },
+            { id: 131, title: 'Panelinha', author: 'Rita Lobo', genre: 'Culinária', price: 75.00, img: 'https://placehold.co/400x600/0a0a0a/f4f4f5?text=Panelinha' },
+            { id: 132, title: 'Jerusalém', author: 'Yotam Ottolenghi', genre: 'Culinária', price: 110.00, img: 'https://placehold.co/400x600/0a0a0a/f4f4f5?text=Jerusalém' },
+            { id: 133, title: 'A Arte da Culinária Francesa', author: 'Julia Child', genre: 'Culinária', price: 150.00, img: 'https://placehold.co/400x600/0a0a0a/f4f4f5?text=Julia+Child' },
+            { id: 134, title: 'Jamie em Casa', author: 'Jamie Oliver', genre: 'Culinária', price: 85.00, img: 'https://placehold.co/400x600/0a0a0a/f4f4f5?text=Jamie+Oliver' },
+            { id: 135, title: 'Dona Benta', author: 'Vários', genre: 'Culinária', price: 120.00, img: 'https://placehold.co/400x600/0a0a0a/f4f4f5?text=Dona+Benta' },
+            { id: 136, title: 'Comida e Cozinha', author: 'Harold McGee', genre: 'Culinária', price: 180.00, img: 'https://placehold.co/400x600/0a0a0a/f4f4f5?text=Comida+e+Cozinha' },
+            // Esportes
+            { id: 137, title: 'Bola Fora', author: 'Andrew Jennings', genre: 'Esportes', price: 50.00, img: 'https://placehold.co/400x600/0a0a0a/f4f4f5?text=Bola+Fora' },
+            { id: 138, title: 'Febre de Bola', author: 'Nick Hornby', genre: 'Esportes', price: 45.00, img: 'https://placehold.co/400x600/0a0a0a/f4f4f5?text=Febre+de+Bola' },
+            { id: 139, title: 'A Sombra de Gigantes', author: 'David Maraniss', genre: 'Esportes', price: 65.00, img: 'https://placehold.co/400x600/0a0a0a/f4f4f5?text=A+Sombra+de+Gigantes' },
+            { id: 140, title: 'Jogo Bruto', author: 'Ken Dryden', genre: 'Esportes', price: 55.00, img: 'https://placehold.co/400x600/0a0a0a/f4f4f5?text=Jogo+Bruto' },
+            { id: 141, title: 'Correr', author: 'Drauzio Varella', genre: 'Esportes', price: 40.00, img: 'https://placehold.co/400x600/0a0a0a/f4f4f5?text=Correr' },
+            { id: 142, title: 'Open', author: 'Andre Agassi', genre: 'Esportes', price: 60.00, img: 'https://placehold.co/400x600/0a0a0a/f4f4f5?text=Open' },
+            { id: 143, title: 'A Corrida da Minha Vida', author: 'Usain Bolt', genre: 'Esportes', price: 52.00, img: 'https://placehold.co/400x600/0a0a0a/f4f4f5?text=Usain+Bolt' },
+            { id: 144, title: 'O Rei do Jogo', author: 'Michael Lewis', genre: 'Esportes', price: 58.00, img: 'https://placehold.co/400x600/0a0a0a/f4f4f5?text=O+Rei+do+Jogo' },
+            // Música
+            { id: 145, title: 'Como a Música Ficou Grátis', author: 'Stephen Witt', genre: 'Música', price: 55.00, img: 'https://placehold.co/400x600/0a0a0a/f4f4f5?text=Música+Grátis' },
+            { id: 146, title: 'Mate-me Por Favor', author: 'Legs McNeil', genre: 'Música', price: 70.00, img: 'https://placehold.co/400x600/0a0a0a/f4f4f5?text=Mate-me+Por+Favor' },
+            { id: 147, title: 'O Som da Revolução', author: 'Rodrigo Merheb', genre: 'Música', price: 60.00, img: 'https://placehold.co/400x600/0a0a0a/f4f4f5?text=O+Som+da+Revolução' },
+            { id: 148, title: 'Apenas Garotos', author: 'Patti Smith', genre: 'Música', price: 52.00, img: 'https://placehold.co/400x600/0a0a0a/f4f4f5?text=Apenas+Garotos' },
+            { id: 149, title: 'Vida', author: 'Keith Richards', genre: 'Música', price: 75.00, img: 'https://placehold.co/400x600/0a0a0a/f4f4f5?text=Vida' },
+            { id: 150, title: 'Crônicas', author: 'Bob Dylan', genre: 'Música', price: 65.00, img: 'https://placehold.co/400x600/0a0a0a/f4f4f5?text=Crônicas' },
+            { id: 151, title: 'Scar Tissue', author: 'Anthony Kiedis', genre: 'Música', price: 68.00, img: 'https://placehold.co/400x600/0a0a0a/f4f4f5?text=Scar+Tissue' },
+            { id: 152, title: 'A História do Rock', author: 'Bob Spitz', genre: 'Música', price: 95.00, img: 'https://placehold.co/400x600/0a0a0a/f4f4f5?text=A+História+do+Rock' },
+            // Arte & Design
+            { id: 153, title: 'A História da Arte', author: 'E.H. Gombrich', genre: 'Arte & Design', price: 150.00, img: 'https://placehold.co/400x600/0a0a0a/f4f4f5?text=A+História+da+Arte' },
+            { id: 154, title: 'O Design do Dia a Dia', author: 'Donald A. Norman', genre: 'Arte & Design', price: 60.00, img: 'https://placehold.co/400x600/0a0a0a/f4f4f5?text=O+Design+do+Dia+a+Dia' },
+            { id: 155, title: 'Roube Como um Artista', author: 'Austin Kleon', genre: 'Arte & Design', price: 40.00, img: 'https://placehold.co/400x600/0a0a0a/f4f4f5?text=Roube+Como+um+Artista' },
+            { id: 156, title: 'Psicologia das Cores', author: 'Eva Heller', genre: 'Arte & Design', price: 75.00, img: 'https://placehold.co/400x600/0a0a0a/f4f4f5?text=Psicologia+das+Cores' },
+            { id: 157, title: 'Não Me Faça Pensar', author: 'Steve Krug', genre: 'Arte & Design', price: 55.00, img: 'https://placehold.co/400x600/0a0a0a/f4f4f5?text=Não+Me+Faça+Pensar' },
+            { id: 158, title: 'Design para Quem Não É Designer', author: 'Robin Williams', genre: 'Arte & Design', price: 50.00, img: 'https://placehold.co/400x600/0a0a0a/f4f4f5?text=Design+para+Não+Designers' },
+            { id: 159, title: 'Tipos que Curam', author: 'Tânia Raposo', genre: 'Arte & Design', price: 48.00, img: 'https://placehold.co/400x600/0a0a0a/f4f4f5?text=Tipos+que+Curam' },
+            { id: 160, title: 'A Sintaxe da Linguagem Visual', author: 'Donis A. Dondis', genre: 'Arte & Design', price: 65.00, img: 'https://placehold.co/400x600/0a0a0a/f4f4f5?text=Sintaxe+Visual' }
+        ];
+        
+
+
+        // Seletores DOM
+        const header = document.querySelector('header');
+        const contentContainer = document.getElementById('content-container');
+        const searchInput = document.getElementById('search-input');
+        const authContainer = document.getElementById('auth-container');
+        const body = document.body;
+        const backToTopBtn = document.getElementById('back-to-top');
+
+        // Modals
+        const loginModal = document.getElementById('login-modal');
+        const registerModal = document.getElementById('register-modal');
+        const bookDetailsModal = document.getElementById('book-details-modal');
+        const bookDetailsContent = document.getElementById('book-details-content');
+        
+        // Botões de Modal
+        const showRegisterBtn = document.getElementById('show-register');
+        const showLoginBtn = document.getElementById('show-login');
+        const closeLoginModalBtn = document.getElementById('close-login-modal');
+        const closeRegisterModalBtn = document.getElementById('close-register-modal');
+
+        // Forms
+        const loginForm = document.getElementById('login-form');
+        const registerForm = document.getElementById('register-form');
+        const checkoutForm = document.getElementById('checkout-form');
+
+        // Carrinho
+        const cartButton = document.getElementById('cart-button');
+        const closeCartButton = document.getElementById('close-cart-button');
+        const cartContainer = document.getElementById('cart-container');
+        const cartItemsContainer = document.getElementById('cart-items');
+        const cartBadge = document.getElementById('cart-badge');
+        const cartTotalEl = document.getElementById('cart-total');
+
+        // Checkout
+        const checkoutBtn = document.getElementById('checkout-btn');
+        const checkoutContainer = document.getElementById('checkout-container');
+        const closeCheckoutButton = document.getElementById('close-checkout-button');
+        const checkoutTotalEl = document.getElementById('checkout-total');
+        
+        // Notificação
+        const toast = document.getElementById('toast-notification');
+
+        // Estado da aplicação
+        let cart = [];
+        let currentUser = null;
+
+        // FUNÇÕES
+
+        const loadFromLocalStorage = () => {
+            try {
+                const storedCart = localStorage.getItem('cart');
+                const storedUser = localStorage.getItem('currentUser');
+                cart = storedCart ? JSON.parse(storedCart) : [];
+                currentUser = storedUser ? JSON.parse(storedUser) : null;
+            } catch (error) {
+                console.error("Erro ao carregar dados do localStorage:", error);
+                cart = [];
+                currentUser = null;
+                localStorage.clear();
+            }
+        };
+
+        // --- Renderização ---
+        const createBookCard = (book) => {
+            return `
+                <div class="book-card w-48 sm:w-56 flex-shrink-0" data-book-id="${book.id}">
+                    <img src="${book.img}" alt="${book.title}" class="pointer-events-none">
+                    <div class="book-card-overlay"></div>
+                    <div class="book-card-content pointer-events-none">
+                        <h3 class="text-lg font-bold truncate">${book.title}</h3>
+                        <p class="text-sm text-zinc-300 mb-2">${book.author}</p>
+                        <div class="flex justify-between items-center mt-4">
+                            <span class="text-xl font-bold text-violet-400">R$ ${book.price.toFixed(2).replace('.', ',')}</span>
+                            <button data-id="${book.id}" class="add-to-cart-btn btn-primary text-white font-bold p-2 rounded-full pointer-events-auto">
+                                <svg xmlns="http://www.w3.org/2000/svg" width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M5 12h14"/><path d="M12 5v14"/></svg>
+                            </button>
+                        </div>
+                    </div>
+                </div>
+            `;
+        };
+        
+        const renderGenreSections = () => {
+            contentContainer.innerHTML = '';
+            const genres = [...new Set(books.map(book => book.genre))];
+            genres.forEach(genre => {
+                const booksInGenre = books.filter(book => book.genre === genre);
+                const sectionEl = document.createElement('section');
+                sectionEl.className = 'mb-10';
+                sectionEl.innerHTML = `
+                    <h2 class="text-3xl font-display tracking-wider text-white mb-4">${genre}</h2>
+                    <div class="carousel">
+                        <div class="carousel-container">
+                            ${booksInGenre.map(createBookCard).join('')}
+                        </div>
+                        <button class="carousel-btn prev">&lt;</button>
+                        <button class="carousel-btn next">&gt;</button>
+                    </div>
+                `;
+                contentContainer.appendChild(sectionEl);
+            });
+            setupCarousels();
+        };
+
+        const setupCarousels = () => {
+            document.querySelectorAll('.carousel').forEach(carousel => {
+                const container = carousel.querySelector('.carousel-container');
+                const prevBtn = carousel.querySelector('.prev');
+                const nextBtn = carousel.querySelector('.next');
+                
+                nextBtn.addEventListener('click', () => {
+                    const scrollAmount = container.offsetWidth * 0.8;
+                    container.scrollLeft += scrollAmount;
+                });
+
+                prevBtn.addEventListener('click', () => {
+                    const scrollAmount = container.offsetWidth * 0.8;
+                    container.scrollLeft -= scrollAmount;
+                });
+            });
+        };
+        
+        const renderSearchResults = (filteredBooks) => {
+            contentContainer.innerHTML = '';
+            if (filteredBooks.length === 0) {
+                contentContainer.innerHTML = `<p class="text-center text-xl">Nenhum livro encontrado para sua busca.</p>`;
+                return;
+            }
+            const resultsContainer = document.createElement('div');
+            resultsContainer.className = 'grid grid-cols-2 sm:grid-cols-3 md:grid-cols-4 lg:grid-cols-5 xl:grid-cols-6 gap-6';
+            resultsContainer.innerHTML = filteredBooks.map(book => `<div>${createBookCard(book)}</div>`).join('');
+            contentContainer.innerHTML = `<h2 class="text-3xl font-display tracking-wider text-white mb-4">Resultados da Busca</h2>`;
+            contentContainer.appendChild(resultsContainer);
+        };
+        
+        const applySearch = () => {
+            const searchTerm = searchInput.value.toLowerCase().trim();
+            if (!searchTerm) {
+                renderGenreSections();
+                return;
+            }
+            const filteredBooks = books.filter(book => 
+                book.title.toLowerCase().includes(searchTerm) || 
+                book.author.toLowerCase().includes(searchTerm)
+            );
+            renderSearchResults(filteredBooks);
+        };
+        
+        // --- Modals e Painéis ---
+        const toggleModal = (modal, show) => {
+            const isOpening = show;
+            
+            if (isOpening) {
+                modal.classList.remove('hidden');
+                modal.classList.add('flex'); // ou 'block' se necessário
+                setTimeout(() => {
+                    modal.classList.add('modal-open');
+                    body.classList.add('modal-open');
+                }, 10);
+            } else {
+                modal.classList.remove('modal-open');
+                body.classList.remove('modal-open');
+                setTimeout(() => {
+                    modal.classList.remove('flex');
+                    modal.classList.add('hidden');
+                }, 300);
+            }
+        };
+        
+        const togglePanel = (panelContainer, show) => {
+             if (show) {
+                panelContainer.classList.remove('hidden');
+                setTimeout(() => {
+                     panelContainer.classList.add(panelContainer.id.includes('cart') ? 'cart-open' : 'checkout-open');
+                     body.classList.add('modal-open');
+                }, 10);
+            } else {
+                panelContainer.classList.remove(panelContainer.id.includes('cart') ? 'cart-open' : 'checkout-open');
+                body.classList.remove('modal-open');
+                setTimeout(() => panelContainer.classList.add('hidden'), 300);
+            }
+        };
+
+        // --- Autenticação ---
+        const renderAuthButtons = () => {
+            if (currentUser) {
+                authContainer.innerHTML = `
+                    <div class="flex items-center gap-4">
+                        <span class="text-white hidden sm:block">Olá, ${currentUser.name}!</span>
+                        <button id="logout-btn" class="bg-red-600 hover:bg-red-700 text-white font-bold py-2 px-4 rounded-lg transition-colors text-sm">Sair</button>
+                    </div>
+                `;
+                 document.getElementById('logout-btn').addEventListener('click', handleLogout);
+            } else {
+                authContainer.innerHTML = `
+                    <button id="login-btn" class="btn-primary text-white font-bold py-2 px-4 rounded-lg text-sm">Login</button>
+                `;
+                 document.getElementById('login-btn').addEventListener('click', () => toggleModal(loginModal, true));
+            }
+        };
+
+        const handleRegister = (e) => {
+            e.preventDefault();
+            const name = document.getElementById('register-name').value;
+            const email = document.getElementById('register-email').value;
+            const password = document.getElementById('register-password').value;
+            let users = JSON.parse(localStorage.getItem('users')) || [];
+            if (users.find(user => user.email === email)) { 
+                showToast('Este email já está cadastrado!');
+                return; 
+            }
+            users.push({ name, email, password });
+            localStorage.setItem('users', JSON.stringify(users));
+            showToast('Conta criada com sucesso! Faça o login.');
+            toggleModal(registerModal, false);
+            toggleModal(loginModal, true);
+            registerForm.reset();
+        };
+        
+        const handleLogin = (e) => {
+            e.preventDefault();
+            const email = document.getElementById('login-email').value;
+            const password = document.getElementById('login-password').value;
+            let users = JSON.parse(localStorage.getItem('users')) || [];
+            const user = users.find(u => u.email === email && u.password === password);
+            if (user) {
+                currentUser = { name: user.name, email: user.email };
+                localStorage.setItem('currentUser', JSON.stringify(currentUser));
+                renderAuthButtons();
+                toggleModal(loginModal, false);
+                loginForm.reset();
+                showToast(`Bem-vindo de volta, ${user.name}!`);
+            } else {
+                showToast('Email ou senha incorretos.');
+            }
+        };
+
+        const handleLogout = () => {
+            currentUser = null;
+            localStorage.removeItem('currentUser');
+            renderAuthButtons();
+        };
+
+        // --- Carrinho ---
+        const renderCart = () => {
+            cartItemsContainer.innerHTML = '';
+            if (cart.length === 0) {
+                cartItemsContainer.innerHTML = `<p class="text-center text-zinc-400">Seu carrinho está vazio.</p>`;
+            } else {
+                 cart.forEach(item => {
+                    const cartItem = document.createElement('div');
+                    cartItem.className = 'flex justify-between items-center mb-4';
+                    cartItem.innerHTML = `
+                        <div class="flex items-center gap-4">
+                            <img src="${item.img}" alt="${item.title}" class="w-16 h-24 object-cover rounded">
+                            <div>
+                                <h4 class="text-white font-semibold">${item.title}</h4>
+                                <p class="text-zinc-400 text-sm">R$ ${item.price.toFixed(2).replace('.', ',')}</p>
+                                <div class="flex items-center gap-3 mt-2">
+                                    <button data-id="${item.id}" class="quantity-decrease bg-zinc-800 rounded-full w-6 h-6">-</button>
+                                    <span class="text-white">${item.quantity}</span>
+                                    <button data-id="${item.id}" class="quantity-increase bg-zinc-800 rounded-full w-6 h-6">+</button>
+                                </div>
+                            </div>
+                        </div>
+                        <button data-id="${item.id}" class="remove-from-cart text-red-500 hover:text-red-400 text-2xl font-bold">&times;</button>
+                    `;
+                    cartItemsContainer.appendChild(cartItem);
+                });
+            }
+            updateCartTotal();
+            updateCartBadge();
+        };
+
+        const updateCartBadge = () => {
+            const totalItems = cart.reduce((sum, item) => sum + item.quantity, 0);
+            if (totalItems > 0) {
+                cartBadge.textContent = totalItems;
+                cartBadge.classList.remove('hidden');
+            } else {
+                cartBadge.classList.add('hidden');
+            }
+        };
+
+        const updateCartTotal = () => {
+            const total = cart.reduce((sum, item) => sum + (item.price * item.quantity), 0);
+            const formattedTotal = `R$ ${total.toFixed(2).replace('.', ',')}`;
+            cartTotalEl.textContent = formattedTotal;
+            checkoutTotalEl.textContent = formattedTotal;
+        };
+
+        const addToCart = (bookId) => {
+            const book = books.find(b => b.id === bookId);
+            const cartItem = cart.find(item => item.id === bookId);
+            if (cartItem) { cartItem.quantity++; } 
+            else { cart.push({ ...book, quantity: 1 }); }
+            localStorage.setItem('cart', JSON.stringify(cart));
+            renderCart();
+            showToast(`'${book.title}' adicionado!`);
+        };
+
+        const updateCartQuantity = (bookId, change) => {
+            const cartItem = cart.find(item => item.id === bookId);
+            if (cartItem) {
+                cartItem.quantity += change;
+                if (cartItem.quantity <= 0) {
+                    cart = cart.filter(item => item.id !== bookId);
+                }
+            }
+            localStorage.setItem('cart', JSON.stringify(cart));
+            renderCart();
+        };
+
+        // --- Detalhes do Livro ---
+        const renderBookDetails = (book) => {
+             // Recomendações: pegar 5 livros do mesmo gênero, excluindo o atual
+            const recommendations = books
+                .filter(b => b.genre === book.genre && b.id !== book.id)
+                .sort(() => 0.5 - Math.random()) // Aleatorizar
+                .slice(0, 5);
+
+            bookDetailsContent.innerHTML = `
+                <div class="flex-shrink-0 p-4 border-b border-zinc-800 flex justify-between items-center">
+                    <h2 class="text-2xl font-bold text-white truncate">${book.title}</h2>
+                    <button id="close-book-details-modal" class="text-zinc-500 hover:text-white text-3xl">&times;</button>
+                </div>
+                <div class="flex-grow p-6 overflow-y-auto">
+                    <div class="flex flex-col md:flex-row gap-8">
+                        <div class="md:w-1/3 flex-shrink-0">
+                            <img src="${book.img}" alt="${book.title}" class="w-full h-auto object-cover rounded-lg shadow-lg">
+                        </div>
+                        <div class="md:w-2/3">
+                            <h3 class="text-xl font-bold text-white">${book.author}</h3>
+                            <p class="text-lg text-violet-400 font-semibold my-2">R$ ${book.price.toFixed(2).replace('.', ',')}</p>
+                            <button data-id="${book.id}" class="add-to-cart-btn-details w-full btn-primary text-white font-bold py-3 px-4 rounded-lg mb-6">Adicionar ao Carrinho</button>
+                            <h4 class="text-lg font-semibold text-white mb-2">Sinopse</h4>
+                            <p class="text-zinc-300 leading-relaxed">${book.synopsis}</p>
+                        </div>
+                    </div>
+                    <div class="mt-8">
+                        <h4 class="text-lg font-semibold text-white mb-4 border-t border-zinc-800 pt-6">Comentários</h4>
+                        <!-- Comentários simulados -->
+                        <div class="space-y-4">
+                            <div class="p-4 bg-zinc-800 rounded-lg">
+                                <p class="font-semibold text-white">Leitor Voraz <span class="text-yellow-400">★★★★★</span></p>
+                                <p class="text-zinc-300">"Uma obra-prima! A construção de mundo é incrível e os personagens são inesquecíveis. Recomendo fortemente!"</p>
+                            </div>
+                             <div class="p-4 bg-zinc-800 rounded-lg">
+                                <p class="font-semibold text-white">Ana B. <span class="text-yellow-400">★★★★☆</span></p>
+                                <p class="text-zinc-300">"Gostei muito da história, mas o final me deixou querendo mais. Ansiosa pela continuação."</p>
+                            </div>
+                        </div>
+                    </div>
+                    <div class="mt-8">
+                        <h4 class="text-lg font-semibold text-white mb-4 border-t border-zinc-800 pt-6">Você também pode gostar</h4>
+                        <div class="grid grid-cols-3 sm:grid-cols-5 gap-4">
+                            ${recommendations.map(rec => `
+                                <div class="book-card-recommendation" data-book-id="${rec.id}">
+                                    <img src="${rec.img}" alt="${rec.title}" class="w-full h-auto object-cover rounded cursor-pointer">
+                                </div>
+                            `).join('')}
+                        </div>
+                    </div>
+                </div>
+            `;
+
+            document.getElementById('close-book-details-modal').addEventListener('click', () => toggleModal(bookDetailsModal, false));
+            document.querySelector('.add-to-cart-btn-details').addEventListener('click', (e) => {
+                const bookId = parseInt(e.target.dataset.id);
+                addToCart(bookId);
+            });
+             document.querySelectorAll('.book-card-recommendation').forEach(card => {
+                card.addEventListener('click', (e) => {
+                    const bookId = parseInt(e.currentTarget.dataset.bookId);
+                    const newBook = books.find(b => b.id === bookId);
+                    if(newBook) renderBookDetails(newBook);
+                });
+            });
+        }
+        
+        // --- Notificação ---
+        const showToast = (message, isError = false) => {
+            toast.textContent = message;
+            toast.className = `fixed bottom-5 right-5 text-white py-3 px-6 rounded-lg shadow-lg transform transition-transform duration-500 ease-in-out z-50 ${isError ? 'bg-red-500' : 'bg-violet-500'}`;
+            toast.classList.remove('translate-x-[120%]');
+            setTimeout(() => {
+                toast.classList.add('translate-x-[120%]');
+            }, 3000);
+        };
+        
+        // --- EVENT LISTENERS ---
+        window.addEventListener('scroll', () => {
+            // Lógica do Header
+            if (window.scrollY > 50) {
+                header.classList.add('scrolled');
+            } else {
+                header.classList.remove('scrolled');
+            }
+
+            // Lógica do Botão Voltar ao Topo
+            if (window.scrollY > 300) {
+                backToTopBtn.classList.add('visible');
+            } else {
+                backToTopBtn.classList.remove('visible');
+            }
+        });
+
+        backToTopBtn.addEventListener('click', () => {
+            window.scrollTo({
+                top: 0,
+                behavior: 'smooth'
+            });
+        });
+
+
+        searchInput.addEventListener('input', applySearch);
+        
+        contentContainer.addEventListener('click', (e) => {
+            const addToCartButton = e.target.closest('.add-to-cart-btn');
+            const bookCard = e.target.closest('.book-card');
+
+            if (addToCartButton) {
+                const bookId = parseInt(addToCartButton.dataset.id);
+                addToCart(bookId);
+            } else if (bookCard) {
+                const bookId = parseInt(bookCard.dataset.bookId);
+                const book = books.find(b => b.id === bookId);
+                if (book) {
+                    renderBookDetails(book);
+                    toggleModal(bookDetailsModal, true);
+                }
+            }
+        });
+        
+        // Listeners para modais e painéis
+        showRegisterBtn.addEventListener('click', () => { toggleModal(loginModal, false); toggleModal(registerModal, true); });
+        showLoginBtn.addEventListener('click', () => { toggleModal(registerModal, false); toggleModal(loginModal, true); });
+        closeLoginModalBtn.addEventListener('click', () => toggleModal(loginModal, false));
+        closeRegisterModalBtn.addEventListener('click', () => toggleModal(registerModal, false));
+        loginForm.addEventListener('submit', handleLogin);
+        registerForm.addEventListener('submit', handleRegister);
+        
+        cartButton.addEventListener('click', () => togglePanel(cartContainer, true));
+        closeCartButton.addEventListener('click', () => togglePanel(cartContainer, false));
+        cartContainer.addEventListener('click', (e) => { if (e.target === cartContainer) togglePanel(cartContainer, false); });
+        
+        checkoutBtn.addEventListener('click', () => {
+            if (cart.length === 0) {
+                showToast("Seu carrinho está vazio!", true);
+                return;
+            }
+            togglePanel(cartContainer, false);
+            togglePanel(checkoutContainer, true);
+        });
+        closeCheckoutButton.addEventListener('click', () => togglePanel(checkoutContainer, false));
+        checkoutContainer.addEventListener('click', (e) => { if (e.target === checkoutContainer) togglePanel(checkoutContainer, false); });
+        
+        checkoutForm.addEventListener('submit', (e) => {
+            e.preventDefault();
+            showToast("Pedido confirmado! Obrigado por sua compra.");
+            cart = [];
+            localStorage.setItem('cart', JSON.stringify(cart));
+            renderCart();
+            togglePanel(checkoutContainer, false);
+            checkoutForm.reset();
+        });
+
+        cartItemsContainer.addEventListener('click', (e) => {
+            const button = e.target.closest('button');
+            if (!button) return;
+            const bookId = parseInt(button.dataset.id);
+            if(button.classList.contains('remove-from-cart')) { 
+                cart = cart.filter(item => item.id !== bookId);
+                localStorage.setItem('cart', JSON.stringify(cart)); 
+                renderCart(); 
+            }
+            if(button.classList.contains('quantity-increase')) { updateCartQuantity(bookId, 1); }
+            if(button.classList.contains('quantity-decrease')) { updateCartQuantity(bookId, -1); }
+        });
+
+        // --- INICIALIZAÇÃO ---
+        const init = () => {
+            loadFromLocalStorage();
+            renderGenreSections();
+            renderAuthButtons();
+            renderCart();
+        };
+
+        init();
+    });
+    </script>
+</body>
+</html>
+
